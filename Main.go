@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
-	"github.com/c-bata/go-prompt"
+	prompt "github.com/c-bata/go-prompt"
 )
 
-//var r *rand.Rand
-//var sneezeProbability *rand.Rand
-
-// A sick Person has a 10% chance of infecting up to 4 other people every 5 seconds.
+// Person is someone who can get sick.  A sick Person has a 10% chance of infecting up to 4 other people every 5 seconds.
 // Infections are manifested by symptoms. If the person has 3 symptoms then he will
 // call a help line. Once he is administered a test he will be diagnosed as being "sick" and
 // go into quarantine for 1 minute. At the end of the quarantine he will lose all his symptoms.
@@ -26,12 +24,14 @@ type Person struct {
 	attributes   *PersonListAttributes
 }
 
+// PersonNode is a node in a circular list
 type PersonNode struct {
 	person   Person
 	next     *PersonNode
 	previous *PersonNode
 }
 
+// PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
 	maxSneeze         int
 	infectionRate     int
@@ -41,21 +41,22 @@ type PersonListAttributes struct {
 	sneezeProbability *rand.Rand
 }
 
+// PersonList is a list of Persons
 type PersonList struct {
 	attributes PersonListAttributes
 	head       *PersonNode
 	tail       *PersonNode
 }
 
-func (list *PersonList) NewPerson(id int, sickDay int, age int, infectedFlag bool) Person {
+func (list *PersonList) newPerson(id int, sickDay int, age int, infectedFlag bool) Person {
 	return Person{id, sickDay, age, infectedFlag, &list.attributes}
 }
 
-func NewPersonNode(person Person) *PersonNode {
+func newPersonNode(person Person) *PersonNode {
 	return &PersonNode{person, nil, nil}
 }
 
-func NewPersonList(maxSneeze, infectionRate, maxSickDays, numberOfPeople, infectedCount int) *PersonList {
+func newPersonList(maxSneeze, infectionRate, maxSickDays, numberOfPeople, infectedCount int) *PersonList {
 
 	attributes := PersonListAttributes{
 		maxSneeze,
@@ -73,16 +74,16 @@ func NewPersonList(maxSneeze, infectionRate, maxSickDays, numberOfPeople, infect
 	}
 
 	for i := 0; i < numberOfPeople; i++ {
-		p := list.NewPerson(i, 0, 0, false)
-		list.Add(p)
+		p := list.newPerson(i, 0, 0, false)
+		list.add(p)
 	}
 
 	return &list
 }
 
-func (list *PersonList) Add(p Person) {
+func (list *PersonList) add(p Person) {
 
-	node := NewPersonNode(p)
+	node := newPersonNode(p)
 
 	if list.head == nil {
 		list.head = node
@@ -100,7 +101,7 @@ func (list *PersonList) Add(p Person) {
 	}
 }
 
-func (list *PersonList) List() {
+func (list *PersonList) list() {
 
 	cur := list.head
 
@@ -117,7 +118,7 @@ func (list *PersonList) List() {
 	}
 }
 
-func (list *PersonList) GatherStats() {
+func (list *PersonList) gatherStats() {
 
 	cur := list.head
 
@@ -140,21 +141,7 @@ func (list *PersonList) GatherStats() {
 	}
 }
 
-func (list *PersonList) Print() {
-
-	// cur := list.head
-
-	// headAddr := list.head
-
-	// for cur != nil {
-	// 	fmt.Println(cur.person)
-	// 	cur = cur.next
-
-	// 	if cur == headAddr {
-	// 		break
-	// 	}
-
-	// }
+func (list *PersonList) print() {
 
 	w := tabwriter.NewWriter(os.Stdout, 2, 2, 4, ' ', 0)
 
@@ -170,7 +157,7 @@ func (list *PersonList) Print() {
 
 }
 
-func (list *PersonList) ReverseList() {
+func (list *PersonList) reverseList() {
 
 	cur := list.tail
 
@@ -186,7 +173,7 @@ func (list *PersonList) ReverseList() {
 	}
 }
 
-func (list *PersonList) Visit(times int) {
+func (list *PersonList) visit(times int) {
 
 	cur := list.head
 
@@ -200,7 +187,7 @@ func (list *PersonList) Visit(times int) {
 
 		list.attributes.infectedCount = 0
 
-		cur.Epoch()
+		cur.epoch()
 
 		if cur.person.InfectedFlag == true {
 			list.attributes.infectedCount++
@@ -213,7 +200,7 @@ func (list *PersonList) Visit(times int) {
 	}
 }
 
-func (list *PersonList) ReverseVisit() {
+func (list *PersonList) reverseVisit() {
 
 	cur := list.head
 
@@ -251,7 +238,7 @@ func (p Person) String() string {
 // 	return sickFlag
 // }
 
-func (node *PersonNode) Epoch() {
+func (node *PersonNode) epoch() {
 
 	if node.person.InfectedFlag == true {
 
@@ -281,37 +268,43 @@ func (node *PersonNode) Epoch() {
 	}
 }
 
-func completer(d prompt.Document) []prompt.Suggest {
+func mainCompleter(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
-		{Text: "load", Description: "Load simulation"},
+		{Text: "configure-people", Description: "Set the number of people"},
+		{Text: "configure-infection-rate", Description: "Set the rate at which people are infected"},
+		{Text: "configure-max-sick-days", Description: "Set the number of days people remain infected"},
 		{Text: "run", Description: "Run simulation"},
 		{Text: "quit", Description: "Quit"},
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
 
-func Sleep() {
+func sleep() {
 	time.Sleep(time.Nanosecond * 1000)
+}
+
+func run() {
+	persons := newPersonList(3, 10, 3, 100, 0)
+
+	persons.head.person.InfectedFlag = true
+
+	persons.visit(10000)
+	//persons.list()
+	persons.gatherStats()
+	persons.print()
 }
 
 func main() {
 
-	persons := NewPersonList(3, 10, 3, 100, 0)
+	for {
+		fmt.Println("Please select command")
+		t := prompt.Input("> ", mainCompleter)
+		fmt.Println("You selected " + t)
 
-	persons.head.person.InfectedFlag = true
-
-	persons.Visit(10000)
-	persons.List()
-	persons.GatherStats()
-	persons.Print()
-
-	// for {
-	// 	fmt.Println("Please select command")
-	// 	t := prompt.Input("> ", completer)
-	// 	fmt.Println("You selected " + t)
-
-	// 	if strings.ToLower(t) == "quit" {
-	// 		break
-	// 	}
-	// }
+		if strings.ToLower(t) == "quit" {
+			break
+		} else if strings.ToLower(t) == "run" {
+			run()
+		}
+	}
 }
