@@ -1,12 +1,18 @@
 package vaccinate
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"text/tabwriter"
 	"time"
 )
+
+const configFile = ".vaccinate"
 
 // Person is someone who can get sick.  A sick Person has a 10% chance of infecting up to 4 other people every 5 seconds.
 // Infections are manifested by symptoms. If the person has 3 symptoms then he will
@@ -30,47 +36,41 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
-	maxSneeze         int
-	infectionRate     int
-	maxSickDays       int
-	numberOfPeople    int
+	MaxSneeze         int
+	InfectionRate     int
+	MaxSickDays       int
+	NumberOfPeople    int
+	Visits            int
 	infectedCount     int
 	sneezeProbability *rand.Rand
 }
 
 // PersonList is a list of Persons
 type PersonList struct {
-	attributes PersonListAttributes
+	attributes *PersonListAttributes
 	head       *PersonNode
 	tail       *PersonNode
 }
 
 func (list *PersonList) newPerson(id int, sickDay int, age int, infectedFlag bool) Person {
-	return Person{id, sickDay, age, infectedFlag, &list.attributes}
+	return Person{id, sickDay, age, infectedFlag, list.attributes}
 }
 
 func newPersonNode(person Person) *PersonNode {
 	return &PersonNode{person, nil, nil}
 }
 
-func newPersonList(maxSneeze, infectionRate, maxSickDays, numberOfPeople, infectedCount int) *PersonList {
+func newPersonList(attr *PersonListAttributes) *PersonList {
 
-	attributes := PersonListAttributes{
-		maxSneeze,
-		infectionRate,
-		maxSickDays,
-		numberOfPeople,
-		infectedCount,
-		rand.New(rand.NewSource(time.Now().UnixNano())),
-	}
+	attr.sneezeProbability = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	list := PersonList{
-		attributes,
+		attr,
 		nil,
 		nil,
 	}
 
-	for i := 0; i < numberOfPeople; i++ {
+	for i := 0; i < attr.NumberOfPeople; i++ {
 		p := list.newPerson(i, 0, 0, false)
 		list.add(p)
 	}
@@ -131,7 +131,7 @@ func (list *PersonList) reverseList() {
 	}
 }
 
-func (list *PersonList) visit(times int) {
+func (list *PersonList) visit() {
 
 	cur := list.head
 
@@ -139,7 +139,7 @@ func (list *PersonList) visit(times int) {
 
 	for cur != nil {
 
-		if times != 0 && iteration > times {
+		if list.attributes.Visits != 0 && iteration > list.attributes.Visits {
 			break
 		}
 
@@ -152,7 +152,7 @@ func (list *PersonList) visit(times int) {
 		}
 		cur = cur.next
 
-		if times != 0 {
+		if list.attributes.Visits != 0 {
 			iteration++
 		}
 	}
@@ -184,19 +184,19 @@ func (node *PersonNode) epoch() {
 		// Previous
 		probability = listAttributes.sneezeProbability.Intn(100)
 
-		if probability <= listAttributes.infectionRate {
+		if probability <= listAttributes.InfectionRate {
 			node.previous.person.InfectedFlag = true
 		}
 
 		// Next
 		probability = listAttributes.sneezeProbability.Intn(100)
 
-		if probability <= listAttributes.infectionRate {
+		if probability <= listAttributes.InfectionRate {
 			node.next.person.InfectedFlag = true
 			node.person.SickDay++
 		}
 
-		if node.person.SickDay > node.person.attributes.maxSickDays {
+		if node.person.SickDay > node.person.attributes.MaxSickDays {
 			node.person.InfectedFlag = false
 			node.person.SickDay = 0
 		}
@@ -237,23 +237,100 @@ func (list *PersonList) printStats() {
 	}
 
 	show("COLUMN", "VALUE")
-	show("People", list.attributes.numberOfPeople)
+	show("People", list.attributes.NumberOfPeople)
+	show("Visits", list.attributes.Visits)
+	show("Infection rate", list.attributes.InfectionRate)
 	show("Infected", list.attributes.infectedCount)
-
 }
 
 func sleep() {
 	time.Sleep(time.Nanosecond * 1000)
 }
 
-// Run runs the simulation
-func Run() {
-	persons := newPersonList(3, 10, 3, 100, 0)
+// DefaultPersonListAttributes returns a *PersonListAttributes with default values
+func DefaultPersonListAttributes() *PersonListAttributes {
+	return &PersonListAttributes{MaxSneeze: 3, InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
+}
 
+// WriteConfig writes PersonListAttributes to the config file under dir
+func WriteConfig(dir string, attr *PersonListAttributes) error {
+	sep := string(os.PathSeparator)
+
+	path := dir + sep + configFile
+
+	data, err := json.MarshalIndent(attr, "", "\t")
+
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	mode := int(0644)
+
+	err = ioutil.WriteFile(path, data, os.FileMode(mode))
+
+	return err
+}
+
+// ReadConfig reads a config file under dir and populates attr
+func ReadConfig(dir string, attr *PersonListAttributes) error {
+	sep := string(os.PathSeparator)
+
+	f, err := ioutil.ReadFile(dir + sep + configFile)
+
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	//fmt.Println("Unmarshalling")
+	err = json.Unmarshal(f, attr)
+
+	//fmt.Println("Returning from ReadConfig")
+	return err
+}
+
+// Load loads the configuration file under dir and populates attr
+func Load(dir string, attr *PersonListAttributes) error {
+
+	sep := string(os.PathSeparator)
+
+	path := dir + sep + configFile
+
+	_, err := os.Stat(path)
+
+	if err != nil {
+		err = WriteConfig(dir, DefaultPersonListAttributes())
+
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+	}
+	//fmt.Println("Reading config...")
+
+	err = ReadConfig(dir, attr)
+
+	// if err != nil {
+	// 	fmt.Println("Error while attempting to read config file: " + err.Error())
+	// 	// log.Fatalf(err.Error())
+	// }
+
+	return err
+
+}
+
+// Run runs the simulation
+func Run(attr *PersonListAttributes) error {
+
+	persons := newPersonList(attr)
+
+	if persons.head == nil {
+		return errors.New("Configuration is not loaded")
+	}
 	persons.head.person.InfectedFlag = true
 
-	persons.visit(10000)
+	persons.visit()
 	//persons.list()
 	persons.gatherStats()
 	persons.printStats()
+
+	return nil
 }
