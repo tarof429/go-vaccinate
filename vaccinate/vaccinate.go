@@ -22,9 +22,28 @@ const configFile = ".vaccinate"
 type Person struct {
 	ID           int
 	SickDay      int
-	age          int
 	InfectedFlag bool
 	attributes   *PersonListAttributes
+}
+
+func (p Person) infected() bool {
+	return p.InfectedFlag == true
+}
+
+func (p *Person) infect() {
+	p.InfectedFlag = true
+}
+
+func (p *Person) disinfect() {
+	p.InfectedFlag = false
+}
+
+func (p *Person) staySick() {
+	p.SickDay++
+}
+
+func (p *Person) resetSickDay() {
+	p.SickDay = 0
 }
 
 // PersonNode is a node in a circular list
@@ -52,8 +71,8 @@ type PersonList struct {
 	tail       *PersonNode
 }
 
-func (list *PersonList) newPerson(id int, sickDay int, age int, infectedFlag bool) Person {
-	return Person{id, sickDay, age, infectedFlag, list.attributes}
+func (list *PersonList) newPerson(id int, sickDay int, infectedFlag bool) Person {
+	return Person{id, sickDay, infectedFlag, list.attributes}
 }
 
 func newPersonNode(person Person) *PersonNode {
@@ -71,7 +90,8 @@ func newPersonList(attr *PersonListAttributes) *PersonList {
 	}
 
 	for i := 0; i < attr.NumberOfPeople; i++ {
-		p := list.newPerson(i, 0, 0, false)
+
+		p := list.newPerson(i, 0, false)
 		list.add(p)
 	}
 
@@ -147,7 +167,7 @@ func (list *PersonList) visit() {
 
 		cur.epoch()
 
-		if cur.person.InfectedFlag == true {
+		if cur.person.infected() {
 			list.attributes.infectedCount++
 		}
 		cur = cur.next
@@ -170,36 +190,40 @@ func (list *PersonList) reverseVisit() {
 }
 
 func (p Person) String() string {
-	return fmt.Sprintf("ID: %d, Infected: %v, SickDay: %d, Age: %d", p.ID, p.InfectedFlag, p.SickDay, p.age)
+	return fmt.Sprintf("ID: %d, Infected: %v, SickDay: %d", p.ID, p.InfectedFlag, p.SickDay)
+}
+
+func (node *PersonNode) sneeze(on *PersonNode) {
+
+	sneezeProbabilty := node.person.attributes.sneezeProbability
+
+	maxSickDays := node.person.attributes.MaxSickDays
+
+	infectionRate := node.person.attributes.InfectionRate
+
+	probability := sneezeProbabilty.Intn(100)
+
+	if on.person.infected() == false {
+		if probability <= infectionRate {
+			on.person.infect()
+			on.person.resetSickDay()
+		}
+	} else {
+		on.person.staySick()
+
+		if on.person.SickDay > maxSickDays {
+			//fmt.Println("Cured!")
+			on.person.disinfect()
+			on.person.resetSickDay()
+		}
+	}
 }
 
 func (node *PersonNode) epoch() {
 
-	if node.person.InfectedFlag == true {
-
-		listAttributes := node.person.attributes
-
-		var probability int
-
-		// Previous
-		probability = listAttributes.sneezeProbability.Intn(100)
-
-		if probability <= listAttributes.InfectionRate {
-			node.previous.person.InfectedFlag = true
-		}
-
-		// Next
-		probability = listAttributes.sneezeProbability.Intn(100)
-
-		if probability <= listAttributes.InfectionRate {
-			node.next.person.InfectedFlag = true
-			node.person.SickDay++
-		}
-
-		if node.person.SickDay > node.person.attributes.MaxSickDays {
-			node.person.InfectedFlag = false
-			node.person.SickDay = 0
-		}
+	if node.person.infected() {
+		node.sneeze(node.previous)
+		node.sneeze(node.next)
 	}
 }
 
@@ -212,7 +236,7 @@ func (list *PersonList) gatherStats() {
 	list.attributes.infectedCount = 0
 
 	for cur != nil {
-		if cur.person.InfectedFlag == true {
+		if cur.person.infected() {
 			list.attributes.infectedCount++
 		}
 
