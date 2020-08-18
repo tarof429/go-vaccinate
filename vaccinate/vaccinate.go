@@ -25,7 +25,6 @@ type Person struct {
 	infectedFlag          bool
 	numberOfTimesInfected int
 	numberOfTimesCured    int
-	attributes            *PersonListAttributes
 }
 
 func (p Person) infected() bool {
@@ -42,11 +41,11 @@ func (p *Person) disinfect() {
 	p.numberOfTimesCured++
 }
 
-func (p *Person) staySick() {
+func (p *Person) stayInBed() {
 	p.sickDay++
 }
 
-func (p *Person) resetSickDay() {
+func (p *Person) getWell() {
 	p.sickDay = 0
 }
 
@@ -67,8 +66,8 @@ type PersonListAttributes struct {
 	sneezeProbability *rand.Rand
 }
 
-// PersonListStats are statistics about the simulation. It needs to be initialized before use
-// and populated by traversing the list
+// PersonListStats are statistics about the simulation.
+// It needs to be initialized before use and populated by traversing the list.
 type PersonListStats struct {
 	infectedCount         int
 	numberOfTimesInfected int
@@ -82,36 +81,24 @@ type PersonList struct {
 	tail *PersonNode
 }
 
-func (list *PersonList) newPerson(id int, sickDay int, infectedFlag bool) Person {
-	return Person{id, sickDay, infectedFlag, 0, 0, list.attr}
-}
-
-func newPersonNode(person Person) *PersonNode {
-	return &PersonNode{person, nil, nil}
-}
-
+// newPersonList is a factory function that generates a PersonList based on attributes.
 func newPersonList(attr *PersonListAttributes) *PersonList {
 
 	attr.sneezeProbability = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	list := PersonList{
-		attr,
-		nil,
-		nil,
-	}
+	list := PersonList{attr, nil, nil}
 
 	for i := 0; i < attr.NumberOfPeople; i++ {
-
-		p := list.newPerson(i, 0, false)
-		list.add(p)
+		list.add(Person{i, 0, false, 0, 0})
 	}
 
 	return &list
 }
 
+// add adds a new person to the list
 func (list *PersonList) add(p Person) {
 
-	node := newPersonNode(p)
+	node := &PersonNode{p, nil, nil}
 
 	if list.head == nil {
 		list.head = node
@@ -129,6 +116,7 @@ func (list *PersonList) add(p Person) {
 	}
 }
 
+// list lists each person in the list
 func (list *PersonList) list() {
 
 	cur := list.head
@@ -146,6 +134,7 @@ func (list *PersonList) list() {
 	}
 }
 
+//reverseList is the same as list() but traverses the list in reverse
 func (list *PersonList) reverseList() {
 
 	cur := list.tail
@@ -162,34 +151,33 @@ func (list *PersonList) reverseList() {
 	}
 }
 
+// visit traverses the list and applies an epoch() to each node
 func (list *PersonList) visit() {
 
-	cur := list.head
+	if list.attr.Visits == 0 {
+		return
+	}
 
+	cur := list.head
 	iteration := 0
 
-	for cur != nil {
-
-		// Provide a condition to break the loop, if desired
-		if list.attr.Visits != 0 && iteration > list.attr.Visits {
-			break
-		}
-
-		list.attr.stats.infectedCount = 0
-
-		cur.epoch()
-
-		if cur.person.infected() {
-			list.attr.stats.infectedCount++
-		}
+	for cur != nil && iteration < list.attr.Visits {
+		list.epoch(cur)
 		cur = cur.next
+		iteration++
 
-		if list.attr.Visits != 0 {
-			iteration++
-		}
 	}
 }
 
+// epoch gives the possibility of each person sneezing on its neighbor
+func (list *PersonList) epoch(node *PersonNode) {
+	if node.person.infected() {
+		list.sneeze(node.previous)
+		list.sneeze(node.next)
+	}
+}
+
+// reverseList prints the list in reverse
 func (list *PersonList) reverseVisit() {
 
 	cur := list.head
@@ -201,48 +189,37 @@ func (list *PersonList) reverseVisit() {
 	}
 }
 
+// String is a stringer function used to print a person
 func (p Person) String() string {
-	return fmt.Sprintf("ID: %d, Infected: %v, Number of times infected: %d, Number of times cured: %d", p.id, p.infectedFlag, p.numberOfTimesInfected, p.attributes.stats.numberOfTimesCured)
+	return fmt.Sprintf("ID: %d, Infected: %v, Number of times infected: %d", p.id, p.infectedFlag, p.numberOfTimesInfected)
 }
 
-func (node *PersonNode) sneeze(on *PersonNode) {
+// sneeze is a method that a person invokes if he's infected
+func (list *PersonList) sneeze(on *PersonNode) {
 
-	sneezeProbabilty := node.person.attributes.sneezeProbability
-
-	maxSickDays := node.person.attributes.MaxSickDays
-
-	infectionRate := node.person.attributes.InfectionRate
-
+	sneezeProbabilty := list.attr.sneezeProbability
+	maxSickDays := list.attr.MaxSickDays
+	infectionRate := list.attr.InfectionRate
 	probability := sneezeProbabilty.Intn(100)
 
 	if on.person.infected() == false {
 		if probability <= infectionRate {
 			on.person.infect()
-			on.person.resetSickDay()
+			on.person.getWell()
 		}
 	} else {
-		on.person.staySick()
+		on.person.stayInBed()
 
 		if on.person.sickDay > maxSickDays {
 			on.person.disinfect()
-			on.person.resetSickDay()
+			on.person.getWell()
 		}
-	}
-}
-
-func (node *PersonNode) epoch() {
-	if node.person.infected() {
-		node.sneeze(node.previous)
-		node.sneeze(node.next)
 	}
 }
 
 // ResetStats resets the list statistics. This method must be caled prior to calling GatherStats(),
 func (list *PersonList) ResetStats() {
 	list.attr.stats = PersonListStats{0, 0, 0}
-	// list.attributes.infectedCount = 0
-	// list.attributes.numberOfTimesInfected = 0
-	// list.attributes.numberOfTimesCured = 0
 }
 
 // GatherStats iterates through the list and gathers statistics
@@ -265,7 +242,6 @@ func (list *PersonList) GatherStats() {
 		if cur == list.head {
 			break
 		}
-
 	}
 }
 
@@ -358,13 +334,15 @@ func Load(dir string, attr *PersonListAttributes) error {
 }
 
 // Run runs the simulation based on the provided attributes.
-// The first person will be infected.
+// The first person will be infected by default.
+// This function is useful for running the simulation in console mode when
+// only the results are desired.
 func Run(attr *PersonListAttributes) error {
 
 	persons := newPersonList(attr)
 
 	if persons.head == nil {
-		return errors.New("Configuration is not loaded")
+		return errors.New("List is empty")
 	}
 
 	persons.head.person.infect()

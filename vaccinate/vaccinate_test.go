@@ -1,7 +1,6 @@
 package vaccinate
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/user"
@@ -75,7 +74,7 @@ func TestRun(t *testing.T) {
 
 }
 
-func TestNewPersonList(t *testing.T) {
-	list := newPersonList(DefaultPersonListAttributes())
-	fmt.Println(*list.attributes)
-}
+// func TestNewPersonList(t *testing.T) {
+// 	list := newPersonList(DefaultPersonListAttributes())
+// 	fmt.Println(*list.attr)
+// }
