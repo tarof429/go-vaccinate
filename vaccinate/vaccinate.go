@@ -20,30 +20,34 @@ const configFile = ".vaccinate"
 // go into quarantine for 1 minute. At the end of the quarantine he will lose all his symptoms.
 // However after going out of quarantine he may be infected again.
 type Person struct {
-	ID           int
-	SickDay      int
-	InfectedFlag bool
-	attributes   *PersonListAttributes
+	id                    int
+	sickDay               int
+	infectedFlag          bool
+	numberOfTimesInfected int
+	numberOfTimesCured    int
+	attributes            *PersonListAttributes
 }
 
 func (p Person) infected() bool {
-	return p.InfectedFlag == true
+	return p.infectedFlag == true
 }
 
 func (p *Person) infect() {
-	p.InfectedFlag = true
+	p.infectedFlag = true
+	p.numberOfTimesInfected++
 }
 
 func (p *Person) disinfect() {
-	p.InfectedFlag = false
+	p.infectedFlag = false
+	p.numberOfTimesCured++
 }
 
 func (p *Person) staySick() {
-	p.SickDay++
+	p.sickDay++
 }
 
 func (p *Person) resetSickDay() {
-	p.SickDay = 0
+	p.sickDay = 0
 }
 
 // PersonNode is a node in a circular list
@@ -55,13 +59,15 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
-	MaxSneeze         int
-	InfectionRate     int
-	MaxSickDays       int
-	NumberOfPeople    int
-	Visits            int
-	infectedCount     int
-	sneezeProbability *rand.Rand
+	MaxSneeze             int
+	InfectionRate         int
+	MaxSickDays           int
+	NumberOfPeople        int
+	Visits                int
+	infectedCount         int
+	numberOfTimesInfected int
+	numberOfTimesCured    int
+	sneezeProbability     *rand.Rand
 }
 
 // PersonList is a list of Persons
@@ -72,7 +78,7 @@ type PersonList struct {
 }
 
 func (list *PersonList) newPerson(id int, sickDay int, infectedFlag bool) Person {
-	return Person{id, sickDay, infectedFlag, list.attributes}
+	return Person{id, sickDay, infectedFlag, 0, 0, list.attributes}
 }
 
 func newPersonNode(person Person) *PersonNode {
@@ -159,13 +165,16 @@ func (list *PersonList) visit() {
 
 	for cur != nil {
 
+		// Provide a condition to break the loop, if desired
 		if list.attributes.Visits != 0 && iteration > list.attributes.Visits {
 			break
 		}
 
 		list.attributes.infectedCount = 0
 
-		cur.epoch()
+		for sneezeCount := 0; sneezeCount < list.attributes.MaxSneeze; sneezeCount++ {
+			cur.epoch()
+		}
 
 		if cur.person.infected() {
 			list.attributes.infectedCount++
@@ -190,7 +199,7 @@ func (list *PersonList) reverseVisit() {
 }
 
 func (p Person) String() string {
-	return fmt.Sprintf("ID: %d, Infected: %v, SickDay: %d", p.ID, p.InfectedFlag, p.SickDay)
+	return fmt.Sprintf("ID: %d, Infected: %v, SickDay: %d", p.id, p.infectedFlag, p.sickDay)
 }
 
 func (node *PersonNode) sneeze(on *PersonNode) {
@@ -211,7 +220,7 @@ func (node *PersonNode) sneeze(on *PersonNode) {
 	} else {
 		on.person.staySick()
 
-		if on.person.SickDay > maxSickDays {
+		if on.person.sickDay > maxSickDays {
 			//fmt.Println("Cured!")
 			on.person.disinfect()
 			on.person.resetSickDay()
@@ -234,11 +243,15 @@ func (list *PersonList) gatherStats() {
 	headAddr := list.head
 
 	list.attributes.infectedCount = 0
+	list.attributes.numberOfTimesInfected = 0
+	list.attributes.numberOfTimesCured = 0
 
 	for cur != nil {
 		if cur.person.infected() {
 			list.attributes.infectedCount++
 		}
+		list.attributes.numberOfTimesInfected += cur.person.numberOfTimesInfected
+		list.attributes.numberOfTimesCured += cur.person.numberOfTimesCured
 
 		//fmt.Println(cur.person)
 		cur = cur.next
@@ -265,6 +278,8 @@ func (list *PersonList) printStats() {
 	show("Visits", list.attributes.Visits)
 	show("Infection rate", list.attributes.InfectionRate)
 	show("Infected", list.attributes.infectedCount)
+	show("Number of  times infected", list.attributes.numberOfTimesInfected)
+	show("Number of times cured", list.attributes.numberOfTimesCured)
 }
 
 func sleep() {
@@ -349,7 +364,7 @@ func Run(attr *PersonListAttributes) error {
 	if persons.head == nil {
 		return errors.New("Configuration is not loaded")
 	}
-	persons.head.person.InfectedFlag = true
+	persons.head.person.infectedFlag = true
 
 	persons.visit()
 	//persons.list()
