@@ -59,25 +59,31 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
-	InfectionRate         int
-	MaxSickDays           int
-	NumberOfPeople        int
-	Visits                int
+	InfectionRate     int
+	MaxSickDays       int
+	NumberOfPeople    int
+	Visits            int
+	stats             PersonListStats
+	sneezeProbability *rand.Rand
+}
+
+// PersonListStats are statistics about the simulation. It needs to be initialized before use
+// and populated by traversing the list
+type PersonListStats struct {
 	infectedCount         int
 	numberOfTimesInfected int
 	numberOfTimesCured    int
-	sneezeProbability     *rand.Rand
 }
 
-// PersonList is a list of Persons
+// PersonList is a list of Persons. It is meant to be used as a circular list.
 type PersonList struct {
-	attributes *PersonListAttributes
-	head       *PersonNode
-	tail       *PersonNode
+	attr *PersonListAttributes
+	head *PersonNode
+	tail *PersonNode
 }
 
 func (list *PersonList) newPerson(id int, sickDay int, infectedFlag bool) Person {
-	return Person{id, sickDay, infectedFlag, 0, 0, list.attributes}
+	return Person{id, sickDay, infectedFlag, 0, 0, list.attr}
 }
 
 func newPersonNode(person Person) *PersonNode {
@@ -165,20 +171,20 @@ func (list *PersonList) visit() {
 	for cur != nil {
 
 		// Provide a condition to break the loop, if desired
-		if list.attributes.Visits != 0 && iteration > list.attributes.Visits {
+		if list.attr.Visits != 0 && iteration > list.attr.Visits {
 			break
 		}
 
-		list.attributes.infectedCount = 0
+		list.attr.stats.infectedCount = 0
 
 		cur.epoch()
 
 		if cur.person.infected() {
-			list.attributes.infectedCount++
+			list.attr.stats.infectedCount++
 		}
 		cur = cur.next
 
-		if list.attributes.Visits != 0 {
+		if list.attr.Visits != 0 {
 			iteration++
 		}
 	}
@@ -196,7 +202,7 @@ func (list *PersonList) reverseVisit() {
 }
 
 func (p Person) String() string {
-	return fmt.Sprintf("ID: %d, Infected: %v, Number of times infected: %d, Number of times cured: %d", p.id, p.infectedFlag, p.numberOfTimesInfected, p.attributes.numberOfTimesCured)
+	return fmt.Sprintf("ID: %d, Infected: %v, Number of times infected: %d, Number of times cured: %d", p.id, p.infectedFlag, p.numberOfTimesInfected, p.attributes.stats.numberOfTimesCured)
 }
 
 func (node *PersonNode) sneeze(on *PersonNode) {
@@ -233,9 +239,10 @@ func (node *PersonNode) epoch() {
 
 // ResetStats resets the list statistics. This method must be caled prior to calling GatherStats(),
 func (list *PersonList) ResetStats() {
-	list.attributes.infectedCount = 0
-	list.attributes.numberOfTimesInfected = 0
-	list.attributes.numberOfTimesCured = 0
+	list.attr.stats = PersonListStats{0, 0, 0}
+	// list.attributes.infectedCount = 0
+	// list.attributes.numberOfTimesInfected = 0
+	// list.attributes.numberOfTimesCured = 0
 }
 
 // GatherStats iterates through the list and gathers statistics
@@ -245,10 +252,10 @@ func (list *PersonList) GatherStats() {
 
 	for cur != nil {
 		if cur.person.infected() {
-			list.attributes.infectedCount++
+			list.attr.stats.infectedCount++
 		}
-		list.attributes.numberOfTimesInfected += cur.person.numberOfTimesInfected
-		list.attributes.numberOfTimesCured += cur.person.numberOfTimesCured
+		list.attr.stats.numberOfTimesInfected += cur.person.numberOfTimesInfected
+		list.attr.stats.numberOfTimesCured += cur.person.numberOfTimesCured
 
 		//fmt.Printf("Number of times infected vs cured (per person): %d (total) %d infected: %v\n", cur.person.numberOfTimesInfected, cur.person.numberOfTimesCured, cur.person.infected())
 		//fmt.Println(cur.person)
@@ -274,12 +281,12 @@ func (list *PersonList) PrintStats() {
 	}
 
 	show("COLUMN", "VALUE")
-	show("People", list.attributes.NumberOfPeople)
-	show("Visits", list.attributes.Visits)
-	show("Infection rate", list.attributes.InfectionRate)
-	show("Infected", list.attributes.infectedCount)
-	show("Number of  times infected", list.attributes.numberOfTimesInfected)
-	show("Number of times cured", list.attributes.numberOfTimesCured)
+	show("People", list.attr.NumberOfPeople)
+	show("Visits", list.attr.Visits)
+	show("Infection rate", list.attr.InfectionRate)
+	show("Infected count", list.attr.stats.infectedCount)
+	show("Number of  times infected", list.attr.stats.numberOfTimesInfected)
+	show("Number of times cured", list.attr.stats.numberOfTimesCured)
 }
 
 func sleep() {
