@@ -59,7 +59,6 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
-	MaxSneeze             int
 	InfectionRate         int
 	MaxSickDays           int
 	NumberOfPeople        int
@@ -172,9 +171,7 @@ func (list *PersonList) visit() {
 
 		list.attributes.infectedCount = 0
 
-		for sneezeCount := 0; sneezeCount < list.attributes.MaxSneeze; sneezeCount++ {
-			cur.epoch()
-		}
+		cur.epoch()
 
 		if cur.person.infected() {
 			list.attributes.infectedCount++
@@ -199,7 +196,7 @@ func (list *PersonList) reverseVisit() {
 }
 
 func (p Person) String() string {
-	return fmt.Sprintf("ID: %d, Infected: %v, SickDay: %d", p.id, p.infectedFlag, p.sickDay)
+	return fmt.Sprintf("ID: %d, Infected: %v, Number of times infected: %d, Number of times cured: %d", p.id, p.infectedFlag, p.numberOfTimesInfected, p.attributes.numberOfTimesCured)
 }
 
 func (node *PersonNode) sneeze(on *PersonNode) {
@@ -221,7 +218,6 @@ func (node *PersonNode) sneeze(on *PersonNode) {
 		on.person.staySick()
 
 		if on.person.sickDay > maxSickDays {
-			//fmt.Println("Cured!")
 			on.person.disinfect()
 			on.person.resetSickDay()
 		}
@@ -229,22 +225,23 @@ func (node *PersonNode) sneeze(on *PersonNode) {
 }
 
 func (node *PersonNode) epoch() {
-
 	if node.person.infected() {
 		node.sneeze(node.previous)
 		node.sneeze(node.next)
 	}
 }
 
-func (list *PersonList) gatherStats() {
-
-	cur := list.head
-
-	headAddr := list.head
-
+// ResetStats resets the list statistics. This method must be caled prior to calling GatherStats(),
+func (list *PersonList) ResetStats() {
 	list.attributes.infectedCount = 0
 	list.attributes.numberOfTimesInfected = 0
 	list.attributes.numberOfTimesCured = 0
+}
+
+// GatherStats iterates through the list and gathers statistics
+func (list *PersonList) GatherStats() {
+
+	cur := list.head
 
 	for cur != nil {
 		if cur.person.infected() {
@@ -253,17 +250,20 @@ func (list *PersonList) gatherStats() {
 		list.attributes.numberOfTimesInfected += cur.person.numberOfTimesInfected
 		list.attributes.numberOfTimesCured += cur.person.numberOfTimesCured
 
+		//fmt.Printf("Number of times infected vs cured (per person): %d (total) %d infected: %v\n", cur.person.numberOfTimesInfected, cur.person.numberOfTimesCured, cur.person.infected())
 		//fmt.Println(cur.person)
+
 		cur = cur.next
 
-		if cur == headAddr {
+		if cur == list.head {
 			break
 		}
 
 	}
 }
 
-func (list *PersonList) printStats() {
+// PrintStats is used to print the statistics in a columnar format
+func (list *PersonList) PrintStats() {
 
 	w := tabwriter.NewWriter(os.Stdout, 2, 2, 4, ' ', 0)
 
@@ -288,7 +288,7 @@ func sleep() {
 
 // DefaultPersonListAttributes returns a *PersonListAttributes with default values
 func DefaultPersonListAttributes() *PersonListAttributes {
-	return &PersonListAttributes{MaxSneeze: 3, InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
+	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
 }
 
 // WriteConfig writes PersonListAttributes to the config file under dir
@@ -310,7 +310,7 @@ func WriteConfig(dir string, attr *PersonListAttributes) error {
 	return err
 }
 
-// ReadConfig reads a config file under dir and populates attr
+// ReadConfig reads a config file under dir and populates the list attributes
 func ReadConfig(dir string, attr *PersonListAttributes) error {
 	sep := string(os.PathSeparator)
 
@@ -327,7 +327,7 @@ func ReadConfig(dir string, attr *PersonListAttributes) error {
 	return err
 }
 
-// Load loads the configuration file under dir and populates attr
+// Load loads the configuration file under dir and populates the list attributes
 func Load(dir string, attr *PersonListAttributes) error {
 
 	sep := string(os.PathSeparator)
@@ -343,20 +343,15 @@ func Load(dir string, attr *PersonListAttributes) error {
 			log.Fatalf(err.Error())
 		}
 	}
-	//fmt.Println("Reading config...")
 
 	err = ReadConfig(dir, attr)
-
-	// if err != nil {
-	// 	fmt.Println("Error while attempting to read config file: " + err.Error())
-	// 	// log.Fatalf(err.Error())
-	// }
 
 	return err
 
 }
 
-// Run runs the simulation
+// Run runs the simulation based on the provided attributes.
+// The first person will be infected.
 func Run(attr *PersonListAttributes) error {
 
 	persons := newPersonList(attr)
@@ -364,12 +359,12 @@ func Run(attr *PersonListAttributes) error {
 	if persons.head == nil {
 		return errors.New("Configuration is not loaded")
 	}
-	persons.head.person.infectedFlag = true
 
+	persons.head.person.infect()
 	persons.visit()
-	//persons.list()
-	persons.gatherStats()
-	persons.printStats()
+	persons.ResetStats()
+	persons.GatherStats()
+	persons.PrintStats()
 
 	return nil
 }
