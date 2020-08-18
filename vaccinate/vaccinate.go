@@ -62,8 +62,8 @@ type PersonListAttributes struct {
 	MaxSickDays       int
 	NumberOfPeople    int
 	Visits            int
-	stats             PersonListStats
 	sneezeProbability *rand.Rand
+	stats             PersonListStats
 }
 
 // PersonListStats are statistics about the simulation.
@@ -197,10 +197,9 @@ func (p Person) String() string {
 // sneeze is a method that a person invokes if he's infected
 func (list *PersonList) sneeze(on *PersonNode) {
 
-	sneezeProbabilty := list.attr.sneezeProbability
 	maxSickDays := list.attr.MaxSickDays
 	infectionRate := list.attr.InfectionRate
-	probability := sneezeProbabilty.Intn(100)
+	probability := list.attr.sneezeProbability.Intn(100)
 
 	if on.person.infected() == false {
 		if probability <= infectionRate {
