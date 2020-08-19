@@ -10,6 +10,8 @@ import (
 
 const testdataDir = "testdata"
 
+var s Simulator
+
 func TestMain(m *testing.M) {
 	err := os.RemoveAll(testdataDir)
 
@@ -23,6 +25,8 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
+	s = ConsoleSimulator{}
+
 	status := m.Run()
 
 	os.Exit(status)
@@ -35,15 +39,15 @@ func TestWriteReadConfig(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	attr := DefaultPersonListAttributes()
+	attr := defaultPersonListAttributes()
 
-	err = WriteConfig(dir, attr)
+	err = writeConfig(dir, attr)
 
 	if err != nil {
 		t.Fatalf("Unable to write config file: %s", err.Error())
 	}
 
-	err2 := ReadConfig(dir, attr)
+	err2 := readConfig(dir, attr)
 
 	if err2 != nil {
 		t.Fatalf("Unable to read config file: %s", err.Error())
@@ -66,7 +70,7 @@ func TestRun(t *testing.T) {
 
 	var attr PersonListAttributes
 
-	err = Load(user.HomeDir, &attr)
+	err = s.Load(user.HomeDir, &attr)
 
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -74,7 +78,9 @@ func TestRun(t *testing.T) {
 
 }
 
-// func TestNewPersonList(t *testing.T) {
-// 	list := newPersonList(DefaultPersonListAttributes())
-// 	fmt.Println(*list.attr)
-// }
+func TestNewPersonList(t *testing.T) {
+	list := newPersonList(defaultPersonListAttributes())
+	if list.head == nil || list.tail == nil {
+		t.Fail()
+	}
+}

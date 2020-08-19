@@ -1,14 +1,8 @@
 package vaccinate
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/rand"
-	"os"
-	"text/tabwriter"
 	"time"
 )
 
@@ -216,13 +210,13 @@ func (list *PersonList) sneeze(on *PersonNode) {
 	}
 }
 
-// ResetStats resets the list statistics. This method must be caled prior to calling GatherStats(),
-func (list *PersonList) ResetStats() {
+// resetStats resets the list statistics. This method must be caled prior to calling GatherStats(),
+func (list *PersonList) resetStats() {
 	list.attr.stats = PersonListStats{0, 0, 0}
 }
 
 // GatherStats iterates through the list and gathers statistics
-func (list *PersonList) GatherStats() {
+func (list *PersonList) gatherStats() {
 
 	cur := list.head
 
@@ -244,111 +238,8 @@ func (list *PersonList) GatherStats() {
 	}
 }
 
-// PrintStats is used to print the statistics in a columnar format
-func (list *PersonList) PrintStats() {
-
-	w := tabwriter.NewWriter(os.Stdout, 2, 2, 4, ' ', 0)
-
-	defer w.Flush()
-
-	show := func(a, b interface{}) {
-		fmt.Fprintf(w, "%v\t%v\n", a, b)
-	}
-
-	show("COLUMN", "VALUE")
-	show("People", list.attr.NumberOfPeople)
-	show("Visits", list.attr.Visits)
-	show("Infection rate", list.attr.InfectionRate)
-	show("Infected count", list.attr.stats.infectedCount)
-	show("Number of  times infected", list.attr.stats.numberOfTimesInfected)
-	show("Number of times cured", list.attr.stats.numberOfTimesCured)
-}
-
-func sleep() {
-	time.Sleep(time.Nanosecond * 1000)
-}
-
-// DefaultPersonListAttributes returns a *PersonListAttributes with default values
-func DefaultPersonListAttributes() *PersonListAttributes {
-	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
-}
-
-// WriteConfig writes PersonListAttributes to the config file under dir
-func WriteConfig(dir string, attr *PersonListAttributes) error {
-	sep := string(os.PathSeparator)
-
-	path := dir + sep + configFile
-
-	data, err := json.MarshalIndent(attr, "", "\t")
-
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	mode := int(0644)
-
-	err = ioutil.WriteFile(path, data, os.FileMode(mode))
-
-	return err
-}
-
-// ReadConfig reads a config file under dir and populates the list attributes
-func ReadConfig(dir string, attr *PersonListAttributes) error {
-	sep := string(os.PathSeparator)
-
-	f, err := ioutil.ReadFile(dir + sep + configFile)
-
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	//fmt.Println("Unmarshalling")
-	err = json.Unmarshal(f, attr)
-
-	//fmt.Println("Returning from ReadConfig")
-	return err
-}
-
-// Load loads the configuration file under dir and populates the list attributes
-func Load(dir string, attr *PersonListAttributes) error {
-
-	sep := string(os.PathSeparator)
-
-	path := dir + sep + configFile
-
-	_, err := os.Stat(path)
-
-	if err != nil {
-		err = WriteConfig(dir, DefaultPersonListAttributes())
-
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-	}
-
-	err = ReadConfig(dir, attr)
-
-	return err
-
-}
-
-// Run runs the simulation based on the provided attributes.
-// The first person will be infected by default.
-// This function is useful for running the simulation in console mode when
-// only the results are desired.
-func Run(attr *PersonListAttributes) error {
-
-	persons := newPersonList(attr)
-
-	if persons.head == nil {
-		return errors.New("List is empty")
-	}
-
-	persons.head.person.infect()
-	persons.visit()
-	persons.ResetStats()
-	persons.GatherStats()
-	persons.PrintStats()
-
-	return nil
+// Simulator is something that loads a configuration and runs a simulation
+type Simulator interface {
+	Run(attr *PersonListAttributes) error
+	Load(dir string, attr *PersonListAttributes) error
 }

@@ -10,6 +10,11 @@ import (
 	"github.com/tarof429/go-vaccinate/vaccinate"
 )
 
+var (
+	s    vaccinate.Simulator
+	attr vaccinate.PersonListAttributes
+)
+
 func mainCompleter(d prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "load", Description: "Load configuration from ~/.vaccinate"},
@@ -25,21 +30,22 @@ func load(attr *vaccinate.PersonListAttributes) error {
 		log.Fatalf(err.Error())
 	}
 
-	return vaccinate.Load(user.HomeDir, attr)
+	return s.Load(user.HomeDir, attr)
 }
 
 func run(attr *vaccinate.PersonListAttributes) error {
-	return vaccinate.Run(attr)
+
+	return s.Run(attr)
 }
 
 func main() {
 
-	var attr vaccinate.PersonListAttributes
+	s = vaccinate.ConsoleSimulator{}
 
 	for {
 		fmt.Println("Please select command")
 		t := prompt.Input("> ", mainCompleter)
-		//fmt.Println("You selected " + t)
+
 		args := strings.Fields(t)
 		cmd := args[0]
 		var err error
