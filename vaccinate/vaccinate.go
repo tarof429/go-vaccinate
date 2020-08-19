@@ -75,6 +75,21 @@ type PersonList struct {
 	tail *PersonNode
 }
 
+// InfectionInfo is a struct for normalizing the simulation result data
+type InfectionInfo struct {
+	Total            int
+	Visits           int
+	InfectionRate    int
+	InfectedCount    int
+	NumberInfections int
+	NumberCured      int
+}
+
+// infectTheHead infects the first person in the list
+func (list *PersonList) infectTheHead() {
+	list.head.person.infect()
+}
+
 // newPersonList is a factory function that generates a PersonList based on attributes.
 func newPersonList(attr *PersonListAttributes) *PersonList {
 
@@ -217,8 +232,8 @@ func (list *PersonList) resetStats() {
 	list.attr.stats = PersonListStats{0, 0, 0}
 }
 
-// GatherStats iterates through the list and gathers statistics
-func (list *PersonList) gatherStats() {
+// InfectionInfo iterates through the list and returns InfectionInfo
+func (list *PersonList) InfectionInfo() InfectionInfo {
 
 	cur := list.head
 
@@ -237,6 +252,15 @@ func (list *PersonList) gatherStats() {
 		if cur == list.head {
 			break
 		}
+	}
+
+	return InfectionInfo{
+		Total:            list.attr.NumberOfPeople,
+		Visits:           list.attr.VisitsPerIteration,
+		InfectionRate:    list.attr.InfectionRate,
+		InfectedCount:    list.attr.stats.infectedCount,
+		NumberInfections: list.attr.stats.numberOfTimesInfected,
+		NumberCured:      list.attr.stats.numberOfTimesCured,
 	}
 }
 

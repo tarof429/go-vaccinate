@@ -25,8 +25,6 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	s = ConsoleSimulator{}
-
 	status := m.Run()
 
 	os.Exit(status)
@@ -68,6 +66,7 @@ func TestRun(t *testing.T) {
 		log.Fatalf(err.Error())
 	}
 
+	s := ConsoleSimulator{}
 	err = s.Load(user.HomeDir)
 
 	if err != nil {

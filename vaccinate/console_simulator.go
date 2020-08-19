@@ -15,8 +15,8 @@ type ConsoleSimulator struct {
 	list *PersonList
 }
 
-// printStats is used to print the statistics in a columnar format
-func (list *PersonList) printStats() {
+// printInfo is used to print the statistics in a columnar format
+func printInfo(info InfectionInfo) {
 
 	w := tabwriter.NewWriter(os.Stdout, 2, 2, 4, ' ', 0)
 
@@ -27,12 +27,12 @@ func (list *PersonList) printStats() {
 	}
 
 	show("COLUMN", "VALUE")
-	show("People", list.attr.NumberOfPeople)
-	show("Visits", list.attr.VisitsPerIteration)
-	show("Infection rate", list.attr.InfectionRate)
-	show("Infected count", list.attr.stats.infectedCount)
-	show("Number of  times infected", list.attr.stats.numberOfTimesInfected)
-	show("Number of times cured", list.attr.stats.numberOfTimesCured)
+	show("People", info.Total)
+	show("Visits", info.Visits)
+	show("Infection rate", info.InfectionRate)
+	show("Infected count", info.InfectedCount)
+	show("Number of  times infected", info.NumberInfections)
+	show("Number of times cured", info.NumberCured)
 }
 
 // defaultPersonListAttributes returns a *PersonListAttributes with default values
@@ -89,7 +89,7 @@ func (s *ConsoleSimulator) Load(dir string) error {
 		err = writeConfig(dir, defaultPersonListAttributes())
 
 		if err != nil {
-			log.Fatalf(err.Error())
+			return err
 		}
 	}
 	attr := PersonListAttributes{}
@@ -118,12 +118,10 @@ func (s *ConsoleSimulator) Run() {
 		return
 	}
 
-	s.list.head.person.infect()
-
 	s.list.resetStats()
+	s.list.infectTheHead()
 	s.list.visit()
-	s.list.gatherStats()
-	s.list.printStats()
+	printInfo(s.list.InfectionInfo())
 
 	// for {
 	// 	s.list.visit()
