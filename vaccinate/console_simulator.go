@@ -11,7 +11,9 @@ import (
 )
 
 // ConsoleSimulator is a kind of Simulator for the console
-type ConsoleSimulator struct{}
+type ConsoleSimulator struct {
+	list *PersonList
+}
 
 // printStats is used to print the statistics in a columnar format
 func (list *PersonList) printStats() {
@@ -75,7 +77,7 @@ func readConfig(dir string, attr *PersonListAttributes) error {
 }
 
 // Load loads the configuration file under dir and populates the list attributes
-func (s ConsoleSimulator) Load(dir string, attr *PersonListAttributes) error {
+func (s *ConsoleSimulator) Load(dir string) error {
 
 	sep := string(os.PathSeparator)
 
@@ -90,10 +92,17 @@ func (s ConsoleSimulator) Load(dir string, attr *PersonListAttributes) error {
 			log.Fatalf(err.Error())
 		}
 	}
+	attr := PersonListAttributes{}
 
-	err = readConfig(dir, attr)
+	err = readConfig(dir, &attr)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	s.list = newPersonList(&attr)
+
+	return nil
 
 }
 
@@ -101,19 +110,17 @@ func (s ConsoleSimulator) Load(dir string, attr *PersonListAttributes) error {
 // The first person will be infected by default.
 // This function is useful for running the simulation in console mode when
 // only the results are desired.
-func (s ConsoleSimulator) Run(attr *PersonListAttributes) error {
+func (s *ConsoleSimulator) Run() error {
 
-	persons := newPersonList(attr)
-
-	if persons.head == nil {
+	if s.list.head == nil {
 		return errors.New("List is empty")
 	}
 
-	persons.head.person.infect()
-	persons.visit()
-	persons.resetStats()
-	persons.gatherStats()
-	persons.printStats()
+	s.list.head.person.infect()
+	s.list.visit()
+	s.list.resetStats()
+	s.list.gatherStats()
+	s.list.printStats()
 
 	return nil
 }

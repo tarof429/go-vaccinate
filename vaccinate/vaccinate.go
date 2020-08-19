@@ -240,6 +240,6 @@ func (list *PersonList) gatherStats() {
 
 // Simulator is something that loads a configuration and runs a simulation
 type Simulator interface {
-	Run(attr *PersonListAttributes) error
-	Load(dir string, attr *PersonListAttributes) error
+	Run() error
+	Load(dir string) error
 }

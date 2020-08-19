@@ -68,9 +68,7 @@ func TestRun(t *testing.T) {
 		log.Fatalf(err.Error())
 	}
 
-	var attr PersonListAttributes
-
-	err = s.Load(user.HomeDir, &attr)
+	err = s.Load(user.HomeDir)
 
 	if err != nil {
 		log.Fatalf(err.Error())

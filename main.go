@@ -11,8 +11,7 @@ import (
 )
 
 var (
-	s    vaccinate.Simulator
-	attr vaccinate.PersonListAttributes
+	s vaccinate.Simulator
 )
 
 func mainCompleter(d prompt.Document) []prompt.Suggest {
@@ -24,39 +23,42 @@ func mainCompleter(d prompt.Document) []prompt.Suggest {
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
 
-func load(attr *vaccinate.PersonListAttributes) error {
+func load() error {
 	user, err := user.Current()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	return s.Load(user.HomeDir, attr)
+	return s.Load(user.HomeDir)
 }
 
-func run(attr *vaccinate.PersonListAttributes) error {
+func run() error {
 
-	return s.Run(attr)
+	return s.Run()
 }
 
 func main() {
 
-	s = vaccinate.ConsoleSimulator{}
+	s = &vaccinate.ConsoleSimulator{}
 
 	for {
 		fmt.Println("Please select command")
 		t := prompt.Input("> ", mainCompleter)
 
 		args := strings.Fields(t)
+		if len(args) < 1 {
+			continue
+		}
 		cmd := args[0]
 		var err error
 
 		if strings.ToLower(cmd) == "load" {
-			err = load(&attr)
+			err = load()
 			if err != nil {
 				fmt.Println("Error while attempting to read config file: " + err.Error())
 			}
 		} else if strings.ToLower(cmd) == "run" {
-			err = run(&attr)
+			err = run()
 
 			if err != nil {
 				fmt.Println(err.Error())
