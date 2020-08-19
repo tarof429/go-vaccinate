@@ -52,12 +52,12 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
-	InfectionRate     int
-	MaxSickDays       int
-	NumberOfPeople    int
-	Visits            int
-	sneezeProbability *rand.Rand
-	stats             PersonListStats
+	InfectionRate      int
+	MaxSickDays        int
+	NumberOfPeople     int
+	VisitsPerIteration int
+	sneezeProbability  *rand.Rand
+	stats              PersonListStats
 }
 
 // PersonListStats are statistics about the simulation.
@@ -148,14 +148,16 @@ func (list *PersonList) reverseList() {
 // visit traverses the list and applies an epoch() to each node
 func (list *PersonList) visit() {
 
-	if list.attr.Visits == 0 {
+	// This is to prevent the remainder of the code from running.
+	// However in the future this could be used as a flag for an infinite loop.
+	if list.attr.VisitsPerIteration == 0 {
 		return
 	}
 
 	cur := list.head
 	iteration := 0
 
-	for cur != nil && iteration < list.attr.Visits {
+	for cur != nil && iteration < list.attr.VisitsPerIteration {
 		list.epoch(cur)
 		cur = cur.next
 		iteration++
@@ -240,6 +242,6 @@ func (list *PersonList) gatherStats() {
 
 // Simulator is something that loads a configuration and runs a simulation
 type Simulator interface {
-	Run() error
+	Run()
 	Load(dir string) error
 }

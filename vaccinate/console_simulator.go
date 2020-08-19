@@ -28,7 +28,7 @@ func (list *PersonList) printStats() {
 
 	show("COLUMN", "VALUE")
 	show("People", list.attr.NumberOfPeople)
-	show("Visits", list.attr.Visits)
+	show("Visits", list.attr.VisitsPerIteration)
 	show("Infection rate", list.attr.InfectionRate)
 	show("Infected count", list.attr.stats.infectedCount)
 	show("Number of  times infected", list.attr.stats.numberOfTimesInfected)
@@ -37,7 +37,7 @@ func (list *PersonList) printStats() {
 
 // defaultPersonListAttributes returns a *PersonListAttributes with default values
 func defaultPersonListAttributes() *PersonListAttributes {
-	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
+	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, VisitsPerIteration: 10000, NumberOfPeople: 100}
 }
 
 // writeConfig writes PersonListAttributes to the config file under dir
@@ -110,17 +110,27 @@ func (s *ConsoleSimulator) Load(dir string) error {
 // The first person will be infected by default.
 // This function is useful for running the simulation in console mode when
 // only the results are desired.
-func (s *ConsoleSimulator) Run() error {
+func (s *ConsoleSimulator) Run() {
 
 	if s.list.head == nil {
-		return errors.New("List is empty")
+		err := errors.New("List is empty")
+		fmt.Println(err.Error())
+		return
 	}
 
 	s.list.head.person.infect()
-	s.list.visit()
+
 	s.list.resetStats()
+	s.list.visit()
 	s.list.gatherStats()
 	s.list.printStats()
 
-	return nil
+	// for {
+	// 	s.list.visit()
+	// 	s.list.gatherStats()
+	// 	s.list.printStats()
+	// 	s.list.resetStats()
+	// 	time.After(time.Second)
+	// 	//return nil
+	// }
 }

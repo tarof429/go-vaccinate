@@ -32,9 +32,9 @@ func load() error {
 	return s.Load(user.HomeDir)
 }
 
-func run() error {
+func run() {
 
-	return s.Run()
+	s.Run()
 }
 
 func main() {
@@ -58,11 +58,11 @@ func main() {
 				fmt.Println("Error while attempting to read config file: " + err.Error())
 			}
 		} else if strings.ToLower(cmd) == "run" {
-			err = run()
+			run()
 
-			if err != nil {
-				fmt.Println(err.Error())
-			}
+			// if err != nil {
+			// 	fmt.Println(err.Error())
+			// }
 		} else if strings.ToLower(cmd) == "quit" {
 			break
 		}
