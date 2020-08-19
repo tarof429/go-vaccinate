@@ -1,4 +1,4 @@
-module github.com/tarof429/go-triage
+module github.com/tarof429/go-vaccinate
 
 go 1.14
 
@@ -10,3 +10,5 @@ require (
 	github.com/pkg/term v0.0.0-20200520122047-c3ffed290a03 // indirect
 	golang.org/x/sys v0.0.0-20200812155832-6a926be9bd1d // indirect
 )
+
+replace github.com/tarof429/go-vaccinate => ./

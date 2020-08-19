@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
-	"github.com/tarof429/go-triage/vaccinate"
+	"github.com/tarof429/go-vaccinate/vaccinate"
 )
 
 func mainCompleter(d prompt.Document) []prompt.Suggest {
