@@ -37,7 +37,7 @@ func printInfo(info InfectionInfo) {
 
 // defaultPersonListAttributes returns a *PersonListAttributes with default values
 func defaultPersonListAttributes() *PersonListAttributes {
-	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, VisitsPerIteration: 10000, NumberOfPeople: 100}
+	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
 }
 
 // writeConfig writes PersonListAttributes to the config file under dir

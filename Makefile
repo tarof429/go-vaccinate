@@ -1,14 +1,15 @@
 default: build
 
 build:
-	go mod download
-	go build -o go-vaccine
+	@go mod download
+	@mkdir dist
+	@go build -o dist/simulator main.go
 
 test:
-	(cd vaccinate; go test)
+	@cd vaccinate; go test
 
 clean:
-	rm -f go-vaccine
+	@rm -r dist
 
 install:
-	go install
+	@go install

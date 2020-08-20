@@ -33,13 +33,12 @@ func load() error {
 }
 
 func run() {
-
 	s.Run()
 }
 
 func main() {
 
-	s = &vaccinate.ConsoleSimulator{}
+	s = &vaccinate.TerminalSimulator{}
 
 	for {
 		fmt.Println("Please select command")
@@ -59,10 +58,6 @@ func main() {
 			}
 		} else if strings.ToLower(cmd) == "run" {
 			run()
-
-			// if err != nil {
-			// 	fmt.Println(err.Error())
-			// }
 		} else if strings.ToLower(cmd) == "quit" {
 			break
 		}

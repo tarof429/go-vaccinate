@@ -52,12 +52,12 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
-	InfectionRate      int
-	MaxSickDays        int
-	NumberOfPeople     int
-	VisitsPerIteration int
-	sneezeProbability  *rand.Rand
-	stats              PersonListStats
+	InfectionRate     int
+	MaxSickDays       int
+	NumberOfPeople    int
+	Visits            int
+	sneezeProbability *rand.Rand
+	stats             PersonListStats
 }
 
 // PersonListStats are statistics about the simulation.
@@ -160,23 +160,16 @@ func (list *PersonList) reverseList() {
 	}
 }
 
-// visit traverses the list and applies an epoch() to each node
+// visit traverses the list one time and applies an epoch() to each node.
+// Each epoch will have a chance to infect adjacent nodes but only if the current node
+// is sick.
 func (list *PersonList) visit() {
 
-	// This is to prevent the remainder of the code from running.
-	// However in the future this could be used as a flag for an infinite loop.
-	if list.attr.VisitsPerIteration == 0 {
-		return
-	}
-
 	cur := list.head
-	iteration := 0
 
-	for cur != nil && iteration < list.attr.VisitsPerIteration {
+	for cur != nil && cur != list.tail {
 		list.epoch(cur)
 		cur = cur.next
-		iteration++
-
 	}
 }
 
@@ -256,7 +249,7 @@ func (list *PersonList) InfectionInfo() InfectionInfo {
 
 	return InfectionInfo{
 		Total:            list.attr.NumberOfPeople,
-		Visits:           list.attr.VisitsPerIteration,
+		Visits:           list.attr.Visits,
 		InfectionRate:    list.attr.InfectionRate,
 		InfectedCount:    list.attr.stats.infectedCount,
 		NumberInfections: list.attr.stats.numberOfTimesInfected,
