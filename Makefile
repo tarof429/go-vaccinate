@@ -2,7 +2,7 @@ default: build
 
 build:
 	@go mod download
-	@mkdir dist
+	@mkdir -p didist
 	@go build -o dist/simulator main.go
 
 test:

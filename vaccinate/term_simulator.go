@@ -13,7 +13,8 @@ import (
 
 // TerminalSimulator is a kind of Simulator for a terminal
 type TerminalSimulator struct {
-	list *PersonList
+	list     *PersonList
+	messages chan InfectionInfo
 }
 
 // Load loads the configuration file under dir and populates the list attributes
@@ -58,11 +59,20 @@ func (s *TerminalSimulator) Run() {
 	s.list.infectTheHead()
 	s.list.resetStats()
 
+	s.messages = make(chan InfectionInfo)
+
 	for i := 0; s.list.attr.Visits == 0 || i < s.list.attr.Visits; {
-		s.list.visit()
-		data := s.list.InfectionInfo()
+
+		go func() {
+			s.list.visit()
+			time.Sleep(time.Millisecond * 1000)
+			data := s.list.InfectionInfo()
+			s.messages <- data
+		}()
+
+		data := <-s.messages
+
 		printInfo(data)
-		time.Sleep(time.Millisecond * 200)
 
 		if s.list.attr.Visits != 0 {
 			i++
