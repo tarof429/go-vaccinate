@@ -1,0 +1,7 @@
+{
+	"CommonName": "Velociraptorus",
+	"InfectionRate": 10,
+	"MaxSickDays": 10,
+	"NumberOfPeople": 100,
+	"Visits": 100
+}

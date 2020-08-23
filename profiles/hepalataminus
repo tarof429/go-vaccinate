@@ -1,0 +1,7 @@
+{
+	"CommonName": "Hepalataminus",
+	"InfectionRate": 4,
+	"MaxSickDays": 8,
+	"NumberOfPeople": 100,
+	"Visits": 100
+}

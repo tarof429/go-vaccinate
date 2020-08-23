@@ -1,0 +1,7 @@
+{
+	"CommonName": "Gastrorhino",
+	"InfectionRate": 13,
+	"MaxSickDays": 5,
+	"NumberOfPeople": 100,
+	"Visits": 100
+}

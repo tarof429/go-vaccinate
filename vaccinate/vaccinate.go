@@ -52,6 +52,7 @@ type PersonNode struct {
 
 // PersonListAttributes are attributes of the Personlist
 type PersonListAttributes struct {
+	CommonName        string
 	InfectionRate     int
 	MaxSickDays       int
 	NumberOfPeople    int
@@ -77,6 +78,7 @@ type PersonList struct {
 
 // InfectionInfo is a struct for normalizing the simulation result data
 type InfectionInfo struct {
+	CommonName       string
 	Total            int
 	Visits           int
 	InfectionRate    int
@@ -248,6 +250,7 @@ func (list *PersonList) InfectionInfo() InfectionInfo {
 	}
 
 	return InfectionInfo{
+		CommonName:       list.attr.CommonName,
 		Total:            list.attr.NumberOfPeople,
 		Visits:           list.attr.Visits,
 		InfectionRate:    list.attr.InfectionRate,

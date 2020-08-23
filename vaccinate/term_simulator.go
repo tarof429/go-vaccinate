@@ -78,9 +78,10 @@ func setupSimulator(s *TerminalSimulator) {
 
 	simTable.Rows = [][]string{
 		{"Column", "Value"},
+		{"Common Name", data.CommonName},
 		{"People", strconv.Itoa(data.Total)},
 		{"Visit", strconv.Itoa(data.Visits)},
-		{"Infection Rate", strconv.Itoa(data.InfectionRate)},
+		{"Infection Rate", strconv.Itoa(data.InfectionRate) + "%"},
 		{"Infection Count", strconv.Itoa(data.InfectedCount)},
 		{"Number of times infected", strconv.Itoa(data.NumberInfections)},
 		{"Number of times cured", strconv.Itoa(data.NumberCured)},
@@ -118,9 +119,10 @@ func setupSimulator(s *TerminalSimulator) {
 		data := s.list.InfectionInfo()
 		simTable.Rows = [][]string{
 			{"Column", "Value"},
+			{"Common Name", data.CommonName},
 			{"People", strconv.Itoa(data.Total)},
 			{"Visit", strconv.Itoa(data.Visits)},
-			{"Infection Rate", strconv.Itoa(data.InfectionRate)},
+			{"Infection Rate", strconv.Itoa(data.InfectionRate) + "%"},
 			{"Infection Count", strconv.Itoa(data.InfectedCount)},
 			{"Number of times infected", strconv.Itoa(data.NumberInfections)},
 			{"Number of times cured", strconv.Itoa(data.NumberCured)},

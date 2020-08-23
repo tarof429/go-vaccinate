@@ -1,0 +1,7 @@
+{
+    "CommonName": "Ebolabola",
+	"InfectionRate": 3,
+	"MaxSickDays": 5,
+	"NumberOfPeople": 100,
+	"Visits": 100
+}
