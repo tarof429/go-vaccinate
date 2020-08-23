@@ -10,7 +10,7 @@ This program uses a circular linked list, where each node is connected to adjace
 
 ## Configuration
 
-The sample configuration for the hypothetical gastrorhino disease used by the docker container is shown below. It has a 13% chance to infect adjacent nodes, can be sick for 5 days (implemented as iterations around the linked list). There are 100 people or nodes. Each iteration is additionall scaled to 100 visits. The console simulator can handle more people but the terminal simulator will not be able to display different amounts correctly.
+The sample configuration for the hypothetical gastrorhino disease used by the docker container is shown below. It has a 13% chance to infect adjacent nodes, can be sick for 5 days (implemented as iterations around the linked list). There are 100 people or nodes. Each iteration is scaled to 100 visits. The console simulator can handle more people but the terminal simulator will not be able to display different amounts correctly.
 
 ```sh
 {
@@ -49,6 +49,8 @@ Usage: simulator [--terminal|--console]
 --console will run the simulation and just print the results.
 --terminal will run the simulation and display the results using a plot and table
 ```
+
+Run the program with the --terminal option. The first time it is run, it will create a sample configuration and write it to ~/.vaccinate. You can browse the profiles directory for other sample configurations or write your own. However, note that the terminal simulator graphics requires 100 people in the configuration to display correctly.
 
 The console option will give you a brief menu of options.
 
