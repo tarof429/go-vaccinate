@@ -36,7 +36,8 @@ $ make clean build
 The docker container comes with a sample configuration and runs the terminal simulator. Once started it will run continuously until 'q' is pressed. This is the simplest way to run the simulation.
 
 ```sh
-$ docker run --rm -ti vaccinate 
+$ docker pull tarof429/vaccinate
+$ docker run --rm -ti tarof429/vaccinate 
 ```
 
 If you want to build go-vaccinate locally, you also have the option of changing the configuration. Run with no options to display usage info.
