@@ -8,11 +8,7 @@ import (
 
 const configFile = ".vaccinate"
 
-// Person is someone who can get sick.  A sick Person has a 10% chance of infecting up to 4 other people every 5 seconds.
-// Infections are manifested by symptoms. If the person has 3 symptoms then he will
-// call a help line. Once he is administered a test he will be diagnosed as being "sick" and
-// go into quarantine for 1 minute. At the end of the quarantine he will lose all his symptoms.
-// However after going out of quarantine he may be infected again.
+// Person is someone who can get sick.
 type Person struct {
 	id                    int
 	sickDay               int
