@@ -19,9 +19,18 @@ type TerminalSimulator struct {
 }
 
 var (
-	columnAWidth = 81
-	columnBWidth = 27
-	rectx        = 110
+	simtablecolumnAWidth = 81
+	simtablecolumnBWidth = 27
+
+	simtablex1 = 0
+	simtabley1 = 0
+	simtablex2 = 110
+	simtabley2 = 14 // used 9 previously
+
+	plotx1 = 0
+	ploty1 = 51
+	plotx2 = 110
+	ploty2 = 15
 )
 
 // Load loads the configuration file under dir and populates the list attributes
@@ -65,9 +74,9 @@ func setupSimulator(s *TerminalSimulator) {
 	s.list.visit()
 	data := s.list.InfectionInfo()
 
-	table1 := widgets.NewTable()
+	simTable := widgets.NewTable()
 
-	table1.Rows = [][]string{
+	simTable.Rows = [][]string{
 		{"Column", "Value"},
 		{"People", strconv.Itoa(data.Total)},
 		{"Visit", strconv.Itoa(data.Visits)},
@@ -75,33 +84,29 @@ func setupSimulator(s *TerminalSimulator) {
 		{"Infection Count", strconv.Itoa(data.InfectedCount)},
 		{"Number of times infected", strconv.Itoa(data.NumberInfections)},
 		{"Number of times cured", strconv.Itoa(data.NumberCured)},
-		{"ColumnA width", strconv.Itoa(columnAWidth)},
-		{"ColumnB width", strconv.Itoa(columnBWidth)},
-		{"Rectx", strconv.Itoa(rectx)},
 	}
-	table1.TextStyle = ui.NewStyle(ui.ColorWhite)
-	table1.ColumnWidths = []int{columnAWidth, columnBWidth}
-	table1.RowSeparator = false
-	table1.Border = true
-	table1.BorderStyle.Fg = ui.ColorBlue
-	table1.FillRow = true
-	table1.Block.Title = " Statistics "
-	table1.SetRect(0, 0, rectx, 12)
+	simTable.TextStyle = ui.NewStyle(ui.ColorWhite)
+	simTable.ColumnWidths = []int{simtablecolumnAWidth, simtablecolumnBWidth}
+	simTable.RowSeparator = false
+	simTable.Border = true
+	simTable.BorderStyle.Fg = ui.ColorBlue
+	simTable.FillRow = true
+	simTable.Block.Title = " Statistics "
+	simTable.SetRect(simtablex1, simtabley1, simtablex2, simtabley2)
 
-	table1.RowStyles[0] = ui.NewStyle(ui.ColorWhite, ui.ColorClear, ui.ModifierBold)
+	simTable.RowStyles[0] = ui.NewStyle(ui.ColorWhite, ui.ColorClear, ui.ModifierBold)
 
-	lc2 := widgets.NewPlot()
-	lc2.Title = " Infection Count "
-	lc2.BorderStyle.Fg = ui.ColorBlue
-	lc2.Data = make([][]float64, 1)
-	lc2.MaxVal = float64(data.Total)
-	lc2.Data[0] = make([]float64, 1)
-
-	lc2.Data[0][counter] = float64(data.InfectedCount)
-	lc2.SetRect(0, 50, 110, 15)
-	lc2.AxesColor = ui.ColorWhite
-	lc2.LineColors[0] = ui.ColorYellow
-	lc2.PlotType = widgets.ScatterPlot
+	simPlot := widgets.NewPlot()
+	simPlot.PlotType = widgets.ScatterPlot
+	simPlot.Title = " Infection Count "
+	simPlot.BorderStyle.Fg = ui.ColorBlue
+	simPlot.Data = make([][]float64, 1)
+	simPlot.MaxVal = float64(data.Total)
+	simPlot.Data[0] = make([]float64, 1)
+	simPlot.Data[0][counter] = float64(data.InfectedCount)
+	simPlot.SetRect(plotx1, ploty1, plotx2, ploty2)
+	simPlot.AxesColor = ui.ColorWhite
+	simPlot.LineColors[0] = ui.ColorYellow
 
 	draw := func() {
 
@@ -111,7 +116,7 @@ func setupSimulator(s *TerminalSimulator) {
 			s.list.visit()
 		}
 		data := s.list.InfectionInfo()
-		table1.Rows = [][]string{
+		simTable.Rows = [][]string{
 			{"Column", "Value"},
 			{"People", strconv.Itoa(data.Total)},
 			{"Visit", strconv.Itoa(data.Visits)},
@@ -119,13 +124,14 @@ func setupSimulator(s *TerminalSimulator) {
 			{"Infection Count", strconv.Itoa(data.InfectedCount)},
 			{"Number of times infected", strconv.Itoa(data.NumberInfections)},
 			{"Number of times cured", strconv.Itoa(data.NumberCured)},
-			{"ColumnA width", strconv.Itoa(columnAWidth)},
-			{"ColumnB width", strconv.Itoa(columnBWidth)},
-			{"Rectx", strconv.Itoa(rectx)},
 		}
+		//lc2.SetRect(plotx1, ploty1, plotx2, ploty2)
+
+		simTable.SetRect(simtablex1, simtabley1, simtablex2, simtabley2)
+
 		// Append to the slice so that we have more data points to display
-		lc2.Data[0] = append(lc2.Data[0], float64(data.InfectedCount))
-		ui.Render(table1, lc2)
+		simPlot.Data[0] = append(simPlot.Data[0], float64(data.InfectedCount))
+		ui.Render(simTable, simPlot)
 	}
 
 	draw()
@@ -138,18 +144,14 @@ func setupSimulator(s *TerminalSimulator) {
 			switch e.ID {
 			case "q", "<C-c>":
 				return
-			case "a":
-				columnAWidth++
-			case "s":
-				columnAWidth--
-			case "d":
-				columnBWidth++
-			case "f":
-				columnBWidth--
-			case "g":
-				rectx--
-			case "h":
-				rectx++
+				// case "a":
+				// 	tabley1--
+				// case "s":
+				// 	tabley1++
+				// case "d":
+				// 	tabley2--
+				// case "f":
+				// 	tabley2++
 			}
 		case <-ticker:
 
@@ -158,7 +160,7 @@ func setupSimulator(s *TerminalSimulator) {
 				time.Sleep(time.Second * 1)
 				s.reset()
 				counter = 0
-				lc2.Data[0] = nil
+				simPlot.Data[0] = nil
 			}
 			draw()
 		}

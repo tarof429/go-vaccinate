@@ -41,8 +41,8 @@ func run() {
 func usage() {
 	fmt.Println("Usage: simulator [--terminal|--console]")
 	fmt.Println()
-	fmt.Println("--terminal will run the simulation and just print the results.")
-	fmt.Println("--console will run the simulation and display the results using a plot and table")
+	fmt.Println("--console will run the simulation and just print the results.")
+	fmt.Println("--terminal will run the simulation and display the results using a plot and table")
 	fmt.Println()
 	os.Exit(1)
 }
