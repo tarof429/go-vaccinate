@@ -38,7 +38,7 @@ func printInfo(info InfectionInfo) {
 
 // defaultPersonListAttributes returns a *PersonListAttributes with default values
 func defaultPersonListAttributes() *PersonListAttributes {
-	return &PersonListAttributes{InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
+	return &PersonListAttributes{CommonName: "Sample", InfectionRate: 10, MaxSickDays: 3, Visits: 10000, NumberOfPeople: 100}
 }
 
 // writeConfig writes PersonListAttributes to the config file under dir
@@ -121,15 +121,9 @@ func (s *ConsoleSimulator) Run() {
 
 	s.list.resetStats()
 	s.list.infectTheHead()
-	s.list.visit()
+	for i := 0; i < s.list.attr.Visits; i++ {
+		s.list.visit()
+	}
 	printInfo(s.list.InfectionInfo())
 
-	// for {
-	// 	s.list.visit()
-	// 	s.list.gatherStats()
-	// 	s.list.printStats()
-	// 	s.list.resetStats()
-	// 	time.After(time.Second)
-	// 	//return nil
-	// }
 }
