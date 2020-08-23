@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os/user"
-	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/tarof429/go-vaccinate/vaccinate"
@@ -40,26 +38,28 @@ func main() {
 
 	s = &vaccinate.TerminalSimulator{}
 
-	for {
-		fmt.Println("Please select command")
-		t := prompt.Input("> ", mainCompleter)
+	load()
+	run()
+	// for {
+	// 	fmt.Println("Please select command")
+	// 	t := prompt.Input("> ", mainCompleter)
 
-		args := strings.Fields(t)
-		if len(args) < 1 {
-			continue
-		}
-		cmd := args[0]
-		var err error
+	// 	args := strings.Fields(t)
+	// 	if len(args) < 1 {
+	// 		continue
+	// 	}
+	// 	cmd := args[0]
+	// 	var err error
 
-		if strings.ToLower(cmd) == "load" {
-			err = load()
-			if err != nil {
-				fmt.Println("Error while attempting to read config file: " + err.Error())
-			}
-		} else if strings.ToLower(cmd) == "run" {
-			run()
-		} else if strings.ToLower(cmd) == "quit" {
-			break
-		}
-	}
+	// 	if strings.ToLower(cmd) == "load" {
+	// 		err = load()
+	// 		if err != nil {
+	// 			fmt.Println("Error while attempting to read config file: " + err.Error())
+	// 		}
+	// 	} else if strings.ToLower(cmd) == "run" {
+	// 		run()
+	// 	} else if strings.ToLower(cmd) == "quit" {
+	// 		break
+	// 	}
+	// }
 }

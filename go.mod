@@ -4,6 +4,8 @@ go 1.14
 
 require (
 	github.com/c-bata/go-prompt v0.2.3
+	github.com/cjbassi/gotop v0.0.0-20200302192305-61ed1ad0c36e
+	github.com/gizak/termui/v3 v3.1.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
