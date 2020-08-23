@@ -27,6 +27,7 @@ func printInfo(info InfectionInfo) {
 	}
 
 	show("COLUMN", "VALUE")
+	show("Common name", info.CommonName)
 	show("People", info.Total)
 	show("Visits", info.Visits)
 	show("Infection rate", info.InfectionRate)
