@@ -65,7 +65,7 @@ func (s *TerminalSimulator) Load(dir string) error {
 
 func setupSimulator(s *TerminalSimulator) {
 	if err := ui.Init(); err != nil {
-		log.Fatalf("failed to initialize termui: %v", err)
+		log.Fatalf("failed to initialize the simulator: %v", err)
 	}
 	defer ui.Close()
 

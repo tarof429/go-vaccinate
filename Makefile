@@ -9,7 +9,7 @@ test:
 	@cd vaccinate; go test
 
 clean:
-	@rm -r dist
+	@rm -rf dist
 
 install:
 	@go install
