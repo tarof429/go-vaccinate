@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"os/user"
+	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/tarof429/go-vaccinate/vaccinate"
@@ -34,32 +37,60 @@ func run() {
 	s.Run()
 }
 
+// Print usage and exit
+func usage() {
+	fmt.Println("Usage: simulator [--terminal|--console]")
+	fmt.Println()
+	fmt.Println("--terminal will run the simulation and just print the results.")
+	fmt.Println("--console will run the simulation and display the results using a plot and table")
+	fmt.Println()
+	os.Exit(1)
+}
+
 func main() {
 
-	s = &vaccinate.TerminalSimulator{}
+	if len(os.Args) != 2 {
+		usage()
+	}
 
-	load()
-	run()
-	// for {
-	// 	fmt.Println("Please select command")
-	// 	t := prompt.Input("> ", mainCompleter)
+	arg := strings.Trim(os.Args[1], "")
 
-	// 	args := strings.Fields(t)
-	// 	if len(args) < 1 {
-	// 		continue
-	// 	}
-	// 	cmd := args[0]
-	// 	var err error
+	if arg == "--terminal" {
+		s = &vaccinate.TerminalSimulator{}
+	} else if arg == "--console" {
+		s = &vaccinate.ConsoleSimulator{}
+	} else {
+		usage()
+	}
 
-	// 	if strings.ToLower(cmd) == "load" {
-	// 		err = load()
-	// 		if err != nil {
-	// 			fmt.Println("Error while attempting to read config file: " + err.Error())
-	// 		}
-	// 	} else if strings.ToLower(cmd) == "run" {
-	// 		run()
-	// 	} else if strings.ToLower(cmd) == "quit" {
-	// 		break
-	// 	}
-	// }
+	// Check the simulator type
+	_, ok := s.(*vaccinate.TerminalSimulator)
+
+	if ok {
+		load()
+		run()
+	} else {
+		for {
+			fmt.Println("Please select command")
+			t := prompt.Input("> ", mainCompleter)
+
+			args := strings.Fields(t)
+			if len(args) < 1 {
+				continue
+			}
+			cmd := args[0]
+			var err error
+
+			if strings.ToLower(cmd) == "load" {
+				err = load()
+				if err != nil {
+					fmt.Println("Error while attempting to read config file: " + err.Error())
+				}
+			} else if strings.ToLower(cmd) == "run" {
+				run()
+			} else if strings.ToLower(cmd) == "quit" {
+				break
+			}
+		}
+	}
 }
