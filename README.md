@@ -31,6 +31,12 @@ To build go-vaccinate, you need go 1.14 and modules.
 $ make clean build
 ```
 
+## Updating
+
+```
+go get -u ./...
+```
+
 ## Running
 
 The docker container comes with a sample configuration and runs the terminal simulator. Once started it will run continuously until 'q' is pressed. This is the simplest way to run the simulation.
